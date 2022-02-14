@@ -1,0 +1,253 @@
+﻿<Window x:Class="GifMaker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GifMaker" 
+        mc:Ignorable="d"
+        Closing="MainWindowClosing"
+        Title="ScreenGifMaker" 
+        Height="600" 
+        Width="900">
+    <Window.Resources>
+        <ResourceDictionary Source="/Styles.xaml"/>
+    </Window.Resources>
+    <Window.DataContext>
+        <local:MainViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="2.5*"/>
+            <ColumnDefinition Width="0.8*"/>
+        </Grid.ColumnDefinitions>
+        <Grid
+            Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="265"/>
+            </Grid.RowDefinitions>
+            <ScrollViewer
+                VerticalScrollBarVisibility="Auto"
+                Grid.Row="1">
+                <StackPanel>
+                    <TextBlock
+                        Style="{StaticResource baseTextBlock}"
+                        Text="Record interval (ms)"/>
+                    <TextBox
+                        Style="{StaticResource baseTextBox}"
+                        Text="{Binding Interval}"
+                        IsEnabled="{Binding IsNotRunning}"/>
+                    <Button
+                        Style="{StaticResource baseButton}"
+                        Command="{Binding StartTakingScreenshots}"
+                        IsEnabled="{Binding IsNotRunning}">
+                        <TextBlock
+                            Style="{StaticResource baseTextBlock}"
+                            Text="Start taking screenshots"/>
+                    </Button>
+                    <Button 
+                        Style="{StaticResource baseButton}"
+                        Command="{Binding StopTakingScreenshots}"
+                        IsEnabled="{Binding IsRunning}">
+                        <TextBlock
+                            Style="{StaticResource baseTextBlock}"
+                            Text="Stop taking screenshots"/>
+                    </Button>
+                    <Button 
+                        Style="{StaticResource baseButton}"
+                        Command="{Binding ClearList}"
+                        IsEnabled="{Binding IsNotRunning}">
+                        <TextBlock
+                            Style="{StaticResource baseTextBlock}"
+                            Text="Clear screenshots list"/>
+                    </Button>
+                    <StackPanel
+                        Margin="0, 15, 0, 0">
+                        <TextBlock
+                            Style="{StaticResource baseTextBlock}"
+                            Text="Frame delay time (ms)"/>
+                        <TextBox
+                            Style="{StaticResource baseTextBox}"
+                            Text="{Binding Delay}"
+                            IsEnabled="{Binding IsNotRunning}"/>
+                        <Button
+                            Command="{Binding SelectAreaCommand}"
+                            IsEnabled="{Binding IsNotRunning}"
+                            Style="{StaticResource baseButton}">
+                            <TextBlock
+                                Style="{StaticResource baseTextBlock}"
+                                Text="Select cropping area"/>
+                        </Button>
+                        <Button
+                            Command="{Binding CreateGif}"
+                            IsEnabled="{Binding CanCreateGif}"
+                            Style="{StaticResource createGifButton}">
+                            <TextBlock
+                                Style="{StaticResource baseTextBlock}"
+                                Text="Create GIF"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+            <ListBox
+                Style="{StaticResource baseListBox}"
+                VirtualizingPanel.ScrollUnit="Pixel"
+                ItemsSource="{Binding Screenshots}"
+                SelectedItem="{Binding SelectedScreenshot}"
+                Grid.Row="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid
+                             Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="3*"/>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="1*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock 
+                                Style="{StaticResource titleTextBlock}"
+                                Grid.Row="0"
+                                Text="{Binding Name}"/>
+                            <StackPanel
+                                Grid.Row="1"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Style="{StaticResource baseTextBlock}"
+                                    Text="Skip: "/>
+                                <CheckBox
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsSkipped}"/>
+                            </StackPanel>
+                            <Button 
+                                Grid.Row="2"
+                                Style="{StaticResource popUpButton}"
+                                Margin="2, 10, 2, 2"
+                                IsEnabled="{Binding DataContext.IsNotRunning, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                Command="{Binding DataContext.MoveUpCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                                <TextBlock
+                                    Style="{StaticResource baseTextBlock}"
+                                    Text="Move up"/>
+                            </Button>
+                            <Image
+                                Grid.Row="3"
+                                Source="{Binding Image}"/>
+                            <Button 
+                                Grid.Row="4"
+                                Style="{StaticResource popUpButton}"
+                                Margin="2, 2, 2, 10"
+                                IsEnabled="{Binding DataContext.IsNotRunning, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                Command="{Binding DataContext.MoveDownCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                                <TextBlock
+                                    Style="{StaticResource baseTextBlock}"
+                                    Text="Move down"/>
+                            </Button>
+                            <Button 
+                                Grid.Row="5"
+                                Style="{StaticResource popUpButton}"
+                                IsEnabled="{Binding DataContext.IsNotRunning, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                Command="{Binding DataContext.CloneCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                                <TextBlock
+                                    Style="{StaticResource baseTextBlock}"
+                                    Text="Clone"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <Border
+            Grid.Column="1"
+            Style="{StaticResource borderImage}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="25"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel
+                    Grid.Row="0"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Style="{StaticResource baseTextBlock}"
+                        Text="Full image:"/>
+                    <CheckBox
+                        IsChecked="{Binding IsFullImage}"
+                        VerticalAlignment="Center"/>
+                </StackPanel>
+                <ScrollViewer
+                    Grid.Row="1"
+                    Visibility="{Binding IsFullImage, Converter={StaticResource visibilityConverter}}"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Auto">
+                    <Image
+                        Source="{Binding Preview}"/>
+                </ScrollViewer>
+                <Image
+                    Visibility="{Binding IsNotFullImage, Converter={StaticResource visibilityConverter}}"
+                    Grid.Row="1"
+                    Source="{Binding Preview}"/>
+            </Grid>
+        </Border>
+        <Grid
+            Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock 
+                Grid.Row="0"
+                Style="{StaticResource baseTextBlock}"
+                Text="Created GIFs:"/>
+            <ListBox
+                Grid.Row="1"
+                Style="{StaticResource baseListBox}"
+                VirtualizingPanel.ScrollUnit="Pixel"
+                ItemsSource="{Binding Gifs}"
+                SelectedItem="{Binding SelectedGif}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock 
+                                Style="{StaticResource titleTextBlock}"
+                                Text="{Binding Name}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding ImagesCount, StringFormat={}Images count: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding Delay, StringFormat={}Delay: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding OriginalSize, Converter={StaticResource sizeConverter}, StringFormat={}Original size: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding CropOrigin, Converter={StaticResource pointConverter}, StringFormat={}Crop origin: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding CroppedSize, Converter={StaticResource sizeConverter}, StringFormat={}Cropped size: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource creationStatus}"/>
+                            <TextBlock 
+                                Style="{StaticResource failureStatus}"/>
+                            <Button 
+                                Style="{StaticResource popUpButton}"
+                                IsEnabled="{Binding IsCreated}"
+                                Command="{Binding DataContext.OpenGIFInFolderCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                                <TextBlock
+                                    Style="{StaticResource baseTextBlock}"
+                                    Text="Open in folder"/>
+                            </Button>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</Window>
