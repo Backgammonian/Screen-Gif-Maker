@@ -227,10 +227,10 @@
                                 Text="{Binding OriginalSize, Converter={StaticResource sizeConverter}, StringFormat={}Original size: {0}}"/>
                             <TextBlock 
                                 Style="{StaticResource baseTextBlock}"
-                                Text="{Binding CropOrigin, Converter={StaticResource pointConverter}, StringFormat={}Crop origin: {0}}"/>
+                                Text="{Binding CroppingRectangle.Location, Converter={StaticResource pointConverter}, StringFormat={}Crop origin: {0}}"/>
                             <TextBlock 
                                 Style="{StaticResource baseTextBlock}"
-                                Text="{Binding CroppedSize, Converter={StaticResource sizeConverter}, StringFormat={}Cropped size: {0}}"/>
+                                Text="{Binding CroppingRectangle.Size, Converter={StaticResource sizeConverter}, StringFormat={}Cropped size: {0}}"/>
                             <TextBlock 
                                 Style="{StaticResource creationStatus}"/>
                             <TextBlock 

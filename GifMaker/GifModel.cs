@@ -26,8 +26,7 @@ namespace GifMaker
             IsCreated = false;
             IsFailed = false;
             OriginalSize = originalSize;
-            CropOrigin = croppingRectangle.Location;
-            CroppedSize = croppingRectangle.Size;
+            CroppingRectangle = croppingRectangle;
         }
 
         public string Name { get; }
@@ -35,8 +34,7 @@ namespace GifMaker
         public int Delay => _delay;
         public string Path => _path;
         public Size OriginalSize { get; }
-        public Point CropOrigin { get; }
-        public Size CroppedSize { get; }
+        public Rectangle CroppingRectangle { get; }
 
         public bool IsCreated
         {
@@ -69,27 +67,54 @@ namespace GifMaker
             task.Start();
         }
 
+        private List<Bitmap> GetCroppedImages()
+        {
+            var croppedImages = new List<Bitmap>();
+            foreach (var image in _images)
+            {
+                var target = new Bitmap(CroppingRectangle.Width, CroppingRectangle.Height);
+                target.SetResolution(96, 96);
+                using (var g = Graphics.FromImage(target))
+                {
+                    System.Diagnostics.Debug.WriteLine(string.Format("Size: {0}, {1}; Resolution: {2}, {3}", target.Width, target.Height, target.HorizontalResolution, target.VerticalResolution));
+
+                    g.DrawImage(image, new Rectangle(0, 0, target.Width, target.Height), CroppingRectangle, GraphicsUnit.Pixel);
+
+                    croppedImages.Add(target);
+                }
+            }
+
+            return croppedImages;
+        }
+
         private void CreateGifTask()
         {
             try
             {
+                var croppedImages = GetCroppedImages();
+
                 var encoder = new AnimatedGifEncoder();
                 encoder.Start(_path);
                 encoder.SetDelay(_delay);
                 encoder.SetRepeat(0);
 
-                for (int i = 0; i < _images.Count; i++)
+                for (int i = 0; i < croppedImages.Count; i++)
                 {
-                    encoder.AddFrame(_images[i]);
+                    encoder.AddFrame(croppedImages[i]);
                 }
 
                 encoder.Finish();
 
                 IsCreated = true;
 
-                foreach (var bitmap in _images)
+                foreach (var image in _images)
                 {
-                    bitmap.Dispose();
+                    image.Dispose();
+                }
+
+                foreach (var image in croppedImages)
+                {
+                    image.Dispose();
                 }
             }
             catch (Exception)

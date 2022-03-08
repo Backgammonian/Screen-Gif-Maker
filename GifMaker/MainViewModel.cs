@@ -354,7 +354,7 @@ namespace GifMaker
 
             Debug.WriteLine("File name " + saveFileDialog.FileName);
 
-            var croppedScreenshots = new List<Bitmap>();
+            var screenshots = new List<Bitmap>();
             foreach (var screenshot in Screenshots)
             {
                 if (screenshot.IsSkipped)
@@ -362,19 +362,10 @@ namespace GifMaker
                     continue;
                 }
 
-                var target = new Bitmap(cropRect.Width, cropRect.Height);
-                target.SetResolution(96, 96);
-                using (var g = Graphics.FromImage(target))
-                {
-                    Debug.WriteLine(string.Format("Size: {0}, {1}; Resolution: {2}, {3}", target.Width, target.Height, target.HorizontalResolution, target.VerticalResolution));
-
-                    g.DrawImage(screenshot.Bitmap, new Rectangle(0, 0, target.Width, target.Height), cropRect, GraphicsUnit.Pixel);
-
-                    croppedScreenshots.Add(target);
-                }
+                screenshots.Add(screenshot.Bitmap);
             }
 
-            var gifModel = new GifModel(saveFileDialog.FileName, croppedScreenshots, _delay, Screenshots[0].Bitmap.Size, cropRect);
+            var gifModel = new GifModel(saveFileDialog.FileName, screenshots, _delay, Screenshots[0].Bitmap.Size, cropRect);
             Gifs.Add(gifModel);
             gifModel.CreateGif();
         }
