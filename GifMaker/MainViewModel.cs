@@ -58,6 +58,7 @@ namespace GifMaker
             OpenGIFInFolderCommand = new RelayCommand<GifModel>(OpenGIFInFolder);
 
             Screenshots = new ObservableCollection<ScreenshotModel>();
+            Screenshots.CollectionChanged += (_, __) => OnPropertyChanged(nameof(ScreenshotsCount));
             Gifs = new ObservableCollection<GifModel>();
 
             CanCreateGif = false;
@@ -81,6 +82,7 @@ namespace GifMaker
         public ObservableCollection<ScreenshotModel> Screenshots { get; }
         public GifModel SelectedGif { get; set; }
         public ObservableCollection<GifModel> Gifs { get; }
+        public int ScreenshotsCount => Screenshots.Count;
 
         public ScreenshotModel SelectedScreenshot
         {
@@ -193,7 +195,9 @@ namespace GifMaker
                 var screenshotName = _startTime.GetConvinientTimeFormat();
                 var screenshot = new ScreenshotModel(screenshotName, bitmap);
                 screenshot.ConvertToBitmapImage();
+
                 Screenshots.Add(screenshot);
+
             }
             catch (Exception ex)
             {
@@ -223,6 +227,7 @@ namespace GifMaker
             {
                 screenshot.Bitmap.Dispose();
             }
+
             Screenshots.Clear();
         }
 

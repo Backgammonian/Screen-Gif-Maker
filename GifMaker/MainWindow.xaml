@@ -24,12 +24,17 @@
         <Grid
             Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="265"/>
             </Grid.RowDefinitions>
+            <TextBlock
+                Grid.Row="0"
+                Text="{Binding ScreenshotsCount, StringFormat={}Screenshots count: {0}}"
+                Style="{StaticResource baseTextBlock}"/>
             <ScrollViewer
                 VerticalScrollBarVisibility="Auto"
-                Grid.Row="1">
+                Grid.Row="2">
                 <StackPanel>
                     <TextBlock
                         Style="{StaticResource baseTextBlock}"
@@ -95,7 +100,7 @@
                 VirtualizingPanel.ScrollUnit="Pixel"
                 ItemsSource="{Binding Screenshots}"
                 SelectedItem="{Binding SelectedScreenshot}"
-                Grid.Row="0">
+                Grid.Row="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid
