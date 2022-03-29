@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace GifMaker
 {
-    public static class Utils
+    public static class ScreenUtils
     {
         [DllImport("User32.dll")]
         private static extern IntPtr GetDC(IntPtr hwnd);

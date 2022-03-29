@@ -61,60 +61,80 @@
     <Style x:Key="borderImage" TargetType="Border">
         <Setter Property="Margin" Value="2"/>
         <Setter Property="BorderThickness" Value="2"/>
-        <Setter Property="BorderBrush" Value="Black"/>
+        <Setter Property="BorderBrush" Value="Gray"/>
     </Style>
 
-    <Style x:Key="creationStatus" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
-        <Setter Property="Foreground" Value="Gray"/>
-        <Setter Property="Text" Value="Creating..."/>
-        <Setter Property="Visibility" Value="Collapsed"/>
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsStarted}" Value="True">
-                <Setter Property="Visibility" Value="Visible"/>
-            </DataTrigger>
-            <DataTrigger Binding="{Binding IsCreated}" Value="True"> 
-                <Setter Property="Foreground" Value="Blue"/>
-                <Setter Property="Text" Value="Done!"/>
-            </DataTrigger>
-            <DataTrigger Binding="{Binding IsFailed}" Value="True">
-                <Setter Property="Visibility" Value="Collapsed"/>
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style x:Key="failureStatus" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
-        <Setter Property="Foreground" Value="Red"/>
-        <Setter Property="Text" Value="Failed to create GIF"/>
-        <Setter Property="Visibility" Value="Collapsed"/>
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsFailed}" Value="True">
-                <Setter Property="Visibility" Value="Visible"/>
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style x:Key="openGifInFolderButton" TargetType="Button" BasedOn="{StaticResource baseButton}">
-        <Setter Property="Visibility" Value="Collapsed"/>
-        <Setter Property="IsEnabled" Value="False"/>
+    <Style x:Key="gifModelStatus" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
         <Style.Triggers>
             <MultiDataTrigger>
                 <MultiDataTrigger.Conditions>
-                    <Condition Binding="{Binding IsCreated}" Value="True" />
-                    <Condition Binding="{Binding RelativeSource={RelativeSource 
-                        Mode=FindAncestor, 
-                        AncestorType={x:Type ListBoxItem}},
-                        Path=IsSelected}" 
-                        Value="True" />
+                    <Condition Binding="{Binding IsStarted}" Value="False" />
+                    <Condition Binding="{Binding IsCancelled}" Value="False" />
+                    <Condition Binding="{Binding IsFailed}" Value="False" />
+                    <Condition Binding="{Binding IsCreated}" Value="False" />
                 </MultiDataTrigger.Conditions>
-                <MultiDataTrigger.Setters>
-                    <Setter Property="Visibility" Value="Visible"/>
-                    <Setter Property="IsEnabled" Value="True"/>
-                </MultiDataTrigger.Setters>
+                <Setter Property="Visibility" Value="Collapsed"/>
             </MultiDataTrigger>
 
-            <DataTrigger Binding="{Binding IsFailed}" Value="True">
-                <Setter Property="IsEnabled" Value="False"/>
-            </DataTrigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsStarted}" Value="True" />
+                    <Condition Binding="{Binding IsCancelled}" Value="False" />
+                    <Condition Binding="{Binding IsFailed}" Value="False" />
+                    <Condition Binding="{Binding IsCreated}" Value="False" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Text" Value="Creating..."/>
+            </MultiDataTrigger>
+
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsStarted}" Value="True" />
+                    <Condition Binding="{Binding IsCancelled}" Value="True" />
+                    <Condition Binding="{Binding IsFailed}" Value="False" />
+                    <Condition Binding="{Binding IsCreated}" Value="False" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Foreground" Value="Red"/>
+                <Setter Property="Text" Value="Cancelled"/>
+            </MultiDataTrigger>
+
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsStarted}" Value="True" />
+                    <Condition Binding="{Binding IsCancelled}" Value="False" />
+                    <Condition Binding="{Binding IsFailed}" Value="True" />
+                    <Condition Binding="{Binding IsCreated}" Value="False" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Foreground" Value="Red"/>
+                <Setter Property="Text" Value="Failed to create GIF"/>
+            </MultiDataTrigger>
+
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsStarted}" Value="True" />
+                    <Condition Binding="{Binding IsCancelled}" Value="True" />
+                    <Condition Binding="{Binding IsFailed}" Value="True" />
+                    <Condition Binding="{Binding IsCreated}" Value="False" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Foreground" Value="Red"/>
+                <Setter Property="Text" Value="Failed to create GIF"/>
+            </MultiDataTrigger>
+
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsStarted}" Value="True" />
+                    <Condition Binding="{Binding IsCancelled}" Value="False" />
+                    <Condition Binding="{Binding IsFailed}" Value="False" />
+                    <Condition Binding="{Binding IsCreated}" Value="True" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Foreground" Value="Blue"/>
+                <Setter Property="Text" Value="Done!"/>
+            </MultiDataTrigger>
         </Style.Triggers>
     </Style>
 </ResourceDictionary>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Drawing;
+using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Gif.Components;
 
@@ -12,17 +14,19 @@ namespace GifMaker
         private bool _isCreated;
         private bool _isFailed;
         private bool _isStarted;
-        private readonly string _path;
-        private readonly List<Bitmap> _images;
-        private readonly int _delay;
+        private bool _isCancelled;
+        private readonly List<string> _imagesPaths;
+        private readonly CancellationTokenSource _tokenSource;
 
-        public GifModel(string path, List<Bitmap> images, int delay, Size originalSize, Rectangle croppingRectangle)
+        public GifModel(string path, List<string> imagesPaths, int delay, Size originalSize, Rectangle croppingRectangle)
         {
-            Name = System.IO.Path.GetFileName(path);
-            _path = path;
-            _images = images;
-            _delay = delay;
-            _isStarted = false;
+            _imagesPaths = imagesPaths;
+            _tokenSource = new CancellationTokenSource();
+
+            Name = Path.GetFileName(path);
+            ImagePath = path;
+            Delay = delay;
+            IsStarted = false;
             IsCreated = false;
             IsFailed = false;
             OriginalSize = originalSize;
@@ -30,31 +34,54 @@ namespace GifMaker
         }
 
         public string Name { get; }
-        public int ImagesCount => _images.Count;
-        public int Delay => _delay;
-        public string Path => _path;
+        public int ImagesCount => _imagesPaths.Count;
+        public int Delay { get; }
+        public string ImagePath { get; }
         public Size OriginalSize { get; }
         public Rectangle CroppingRectangle { get; }
+        public bool IsRunning => IsStarted && !(IsCancelled || IsFailed) && !IsCreated;
 
         public bool IsCreated
         {
             get => _isCreated;
-            private set => SetProperty(ref _isCreated, value);
+            private set
+            {
+                SetProperty(ref _isCreated, value);
+                OnPropertyChanged(nameof(IsRunning));
+            }
         }
 
         public bool IsFailed
         {
             get => _isFailed;
-            private set => SetProperty(ref _isFailed, value);
+            private set
+            {
+                SetProperty(ref _isFailed, value);
+                OnPropertyChanged(nameof(IsRunning));
+            }
         }
 
         public bool IsStarted
         {
             get => _isStarted;
-            private set => SetProperty(ref _isStarted, value);
+            private set
+            {
+                SetProperty(ref _isStarted, value);
+                OnPropertyChanged(nameof(IsRunning));
+            }
         }
 
-        public void CreateGif()
+        public bool IsCancelled
+        {
+            get => _isCancelled;
+            private set
+            {
+                SetProperty(ref _isCancelled, value);
+                OnPropertyChanged(nameof(IsRunning));
+            }
+        }
+
+        public async Task CreateGif()
         {
             if (IsStarted)
             {
@@ -63,64 +90,53 @@ namespace GifMaker
 
             IsStarted = true;
 
-            var task = new Task(() => CreateGifTask());
-            task.Start();
+            await Task.Run(() => CreateGifTask(_tokenSource.Token));
         }
 
-        private List<Bitmap> GetCroppedImages()
-        {
-            var croppedImages = new List<Bitmap>();
-            foreach (var image in _images)
-            {
-                var target = new Bitmap(CroppingRectangle.Width, CroppingRectangle.Height);
-                target.SetResolution(96, 96);
-                using (var g = Graphics.FromImage(target))
-                {
-                    System.Diagnostics.Debug.WriteLine(string.Format("Size: {0}, {1}; Resolution: {2}, {3}", target.Width, target.Height, target.HorizontalResolution, target.VerticalResolution));
-
-                    g.DrawImage(image, new Rectangle(0, 0, target.Width, target.Height), CroppingRectangle, GraphicsUnit.Pixel);
-
-                    croppedImages.Add(target);
-                }
-            }
-
-            return croppedImages;
-        }
-
-        private void CreateGifTask()
+        private void CreateGifTask(CancellationToken token)
         {
             try
             {
-                var croppedImages = GetCroppedImages();
-
                 var encoder = new AnimatedGifEncoder();
-                encoder.Start(_path);
-                encoder.SetDelay(_delay);
+                encoder.Start(ImagePath);
+                encoder.SetDelay(Delay);
                 encoder.SetRepeat(0);
 
-                for (int i = 0; i < croppedImages.Count; i++)
+                for (int i = 0; i < _imagesPaths.Count; i++)
                 {
-                    encoder.AddFrame(croppedImages[i]);
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    //if one of the images is missing, just skip it
+                    try
+                    {
+                        using var image = new Bitmap(_imagesPaths[i]);
+                        using var croppedImage = image.Crop(CroppingRectangle);
+
+                        encoder.AddFrame(croppedImage);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
                 }
 
                 encoder.Finish();
 
                 IsCreated = true;
-
-                foreach (var image in _images)
-                {
-                    image.Dispose();
-                }
-
-                foreach (var image in croppedImages)
-                {
-                    image.Dispose();
-                }
             }
             catch (Exception)
             {
                 IsFailed = true;
             }
+        }
+
+        public void Cancel()
+        {
+            IsCancelled = true;
+            _tokenSource.Cancel();
         }
     }
 }

@@ -6,10 +6,11 @@ namespace GifMaker
     {
         public static string GetConvinientTimeFormat(this DateTime time)
         {
-            return string.Format("{0}-{1}-{2}, {3} {4} {5}",
+            return string.Format("{0}-{1}-{2}-{3}, {4} {5} {6}",
                 time.Hour,
                 Format(time.Minute),
                 Format(time.Second),
+                Format(time.Millisecond),
                 time.Day,
                 _monthAbbreviations[time.Month - 1],
                 time.Year);

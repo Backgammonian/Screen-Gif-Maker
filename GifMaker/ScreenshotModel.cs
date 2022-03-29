@@ -1,50 +1,41 @@
-﻿using System.IO;
-using System.Windows.Media.Imaging;
+﻿using System.Windows.Media.Imaging;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace GifMaker
 {
     public class ScreenshotModel : ObservableObject
     {
-        private string _name;
         private bool _isSkipped;
-        private BitmapImage _bitmapImage;
-        private bool _isConverted;
+        private BitmapImage _thumbnail;
+        private bool _isThumbnailCreated;
 
-        public ScreenshotModel(string name, Bitmap bitmap)
+        public ScreenshotModel(string path, Bitmap bitmap)
         {
-            Name = name;
+            ImagePath = path;
+            Name = Path.GetFileName(path);
             IsSkipped = false;
-            Bitmap = bitmap;
-            IsConverted = false;
+            IsThumbnailCreated = false;
+            Size = new Size(bitmap.Width, bitmap.Height);
+
+            CreateThumbnail(bitmap);
         }
 
         public ScreenshotModel(ScreenshotModel model)
         {
+            ImagePath = model.ImagePath;
             Name = model.Name;
             IsSkipped = model.IsSkipped;
-            Bitmap = model.Bitmap;
-            IsConverted = model.IsConverted;
-            if (!IsConverted)
-            {
-                ConvertToBitmapImage();
-            }
-            else
-            {
-                Image = model.Image;
-            }
+            IsThumbnailCreated = model.IsThumbnailCreated;
+            Size = new Size(model.Size.Width, model.Size.Height);
+            Thumbnail = model.Thumbnail.Clone();
         }
 
-        public Bitmap Bitmap { get; }
-
-        public string Name
-        {
-            get => _name;
-            private set => SetProperty(ref _name, value);
-        }
+        public string Name { get; }
+        public string ImagePath { get; }
+        public Size Size { get; }
 
         public bool IsSkipped
         {
@@ -52,38 +43,31 @@ namespace GifMaker
             set => SetProperty(ref _isSkipped, value);
         }
 
-        public bool IsConverted
+        public bool IsThumbnailCreated
         {
-            get => _isConverted;
-            private set => SetProperty(ref _isConverted, value);
+            get => _isThumbnailCreated;
+            private set => SetProperty(ref _isThumbnailCreated, value);
         }
 
-        public BitmapImage Image
+        public BitmapImage Thumbnail
         {
-            get => _bitmapImage;
-            private set => SetProperty(ref _bitmapImage, value);
+            get => _thumbnail;
+            private set => SetProperty(ref _thumbnail, value);
         }
 
-        public void ConvertToBitmapImage()
+        private void CreateThumbnail(Bitmap bitmap)
         {
-            if (IsConverted)
+            if (IsThumbnailCreated)
             {
                 return;
             }
 
-            using MemoryStream memory = new MemoryStream();
-            Bitmap.Save(memory, ImageFormat.Bmp);
-            memory.Position = 0;
-            var bitmapimage = new BitmapImage();
-            bitmapimage.BeginInit();
-            bitmapimage.StreamSource = memory;
-            bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
-            bitmapimage.EndInit();
+            var smallImage = bitmap.Resize(new Size(bitmap.Width / 5, bitmap.Height / 5));
 
-            Image = bitmapimage;
-            _isConverted = true;
+            Thumbnail = smallImage.ToBitmapImage();
+            IsThumbnailCreated = true;
 
-            Debug.WriteLine(string.Format("(ConvertToBitmapImage) Size: {2}, {3}; Resolution: {0}, {1}", Image.DpiX, Image.DpiY, Image.Width, Image.Height));
+            Debug.WriteLine(string.Format("(CreateThumbnail) Size: {2}, {3}; Resolution: {0}, {1}", Thumbnail.DpiX, Thumbnail.DpiY, Thumbnail.Width, Thumbnail.Height));
         }
     }
 }
