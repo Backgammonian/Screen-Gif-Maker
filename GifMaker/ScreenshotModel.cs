@@ -1,6 +1,5 @@
 ﻿using System.Windows.Media.Imaging;
 using System.Drawing;
-using System.Diagnostics;
 using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 
@@ -66,8 +65,6 @@ namespace GifMaker
 
             Thumbnail = smallImage.ToBitmapImage();
             IsThumbnailCreated = true;
-
-            Debug.WriteLine(string.Format("(CreateThumbnail) Size: {2}, {3}; Resolution: {0}, {1}", Thumbnail.DpiX, Thumbnail.DpiY, Thumbnail.Width, Thumbnail.Height));
         }
     }
 }

@@ -8,7 +8,7 @@
         Closing="MainWindowClosing"
         Title="ScreenGifMaker" 
         Height="600" 
-        Width="900">
+        Width="950">
     <Window.Resources>
         <ResourceDictionary Source="/Styles.xaml"/>
     </Window.Resources>
@@ -242,6 +242,9 @@
                             <TextBlock 
                                 Style="{StaticResource baseTextBlock}"
                                 Text="{Binding CroppingRectangle.Size, Converter={StaticResource sizeConverter}, StringFormat={}Cropped size: {0}}"/>
+                            <TextBlock 
+                                Style="{StaticResource baseTextBlock}"
+                                Text="{Binding Progress, Converter={StaticResource progressConverter}, StringFormat={}Progress: {0}}"/>
                             <TextBlock 
                                 Style="{StaticResource gifModelStatus}"/>
                             <Button 

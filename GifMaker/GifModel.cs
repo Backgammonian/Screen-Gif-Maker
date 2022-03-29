@@ -17,6 +17,7 @@ namespace GifMaker
         private bool _isCancelled;
         private readonly List<string> _imagesPaths;
         private readonly CancellationTokenSource _tokenSource;
+        private int _processedImagesCount;
 
         public GifModel(string path, List<string> imagesPaths, int delay, Size originalSize, Rectangle croppingRectangle)
         {
@@ -40,6 +41,7 @@ namespace GifMaker
         public Size OriginalSize { get; }
         public Rectangle CroppingRectangle { get; }
         public bool IsRunning => IsStarted && !(IsCancelled || IsFailed) && !IsCreated;
+        public double Progress => ProcessedImagesCount / (double)ImagesCount;
 
         public bool IsCreated
         {
@@ -81,6 +83,16 @@ namespace GifMaker
             }
         }
 
+        public int ProcessedImagesCount
+        {
+            get => _processedImagesCount;
+            private set
+            {
+                SetProperty(ref _processedImagesCount, value);
+                OnPropertyChanged(nameof(Progress));
+            }
+        }
+
         public async Task CreateGif()
         {
             if (IsStarted)
@@ -116,6 +128,7 @@ namespace GifMaker
                         using var croppedImage = image.Crop(CroppingRectangle);
 
                         encoder.AddFrame(croppedImage);
+                        ProcessedImagesCount += 1;
                     }
                     catch (Exception)
                     {

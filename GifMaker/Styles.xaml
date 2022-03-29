@@ -5,6 +5,7 @@
     <local:BooleanToVisibilityConverter x:Key="visibilityConverter" />
     <local:SizeConverter x:Key="sizeConverter" />
     <local:PointConverter x:Key="pointConverter" />
+    <local:ProgressConverter x:Key="progressConverter" />
 
     <Style x:Key="baseTextBlock" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14"/>

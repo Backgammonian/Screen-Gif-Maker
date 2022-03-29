@@ -28,6 +28,7 @@ namespace GifMaker
         private readonly Size _screenSize;
         private DateTime _startTime;
         private int _currentScreenshotNumber;
+        private readonly List<string> _folderNames;
         private string _currentFolderName;
         private CroppingWindow _croppingWindow;
         private bool _canCreateGif;
@@ -72,6 +73,8 @@ namespace GifMaker
             var dpiYProperty = typeof(Windows.SystemParameters).GetProperty("Dpi", BindingFlags.NonPublic | BindingFlags.Static);
             _originalDpiX = (int)dpiXProperty.GetValue(null, null);
             _originalDpiY = (int)dpiYProperty.GetValue(null, null);
+
+            _folderNames = new List<string>();
         }
 
         public ICommand StartTakingScreenshots { get; }
@@ -227,6 +230,7 @@ namespace GifMaker
             _currentScreenshotNumber = 0;
             var folder = Directory.CreateDirectory(_startTime.GetConvinientTimeFormat());
             _currentFolderName = folder.FullName;
+            _folderNames.Add(folder.FullName);
 
             IsNotRunning = false;
 
@@ -411,6 +415,17 @@ namespace GifMaker
             if (_croppingWindow != null)
             {
                 _croppingWindow.Close();
+            }
+
+            for (int i = 0; i < _folderNames.Count; i++)
+            {
+                try
+                {
+                    Directory.Delete(_folderNames[i], true);
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 
