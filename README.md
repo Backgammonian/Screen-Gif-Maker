@@ -9,7 +9,7 @@ WPF app for creating GIFs from screenshots.
 * Wait for animation to be created
 * When process is done, you can open the file
 * Enjoy the result
-## Demonstration:
+## Demonstration
 ![uploads](GifMaker/demo.gif)
 ## Libraries:
 * [UI-Cropping-Image](https://github.com/dmitryshelamov/UI-Cropping-Image)
