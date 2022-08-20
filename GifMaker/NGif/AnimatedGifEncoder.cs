@@ -179,7 +179,61 @@ namespace Gif.Components
 
             return ok;
         }
-    
+
+        /**
+         * Adds next GIF frame.  The frame is not written immediately, but is
+         * actually deferred until the next frame is received so that timing
+         * data can be inserted.  Invoking <code>finish()</code> flushes all
+         * frames.  If <code>setSize</code> was not invoked, the size of the
+         * first image is used for all subsequent frames.
+         *
+         * @param im BufferedImage containing frame to write.
+         * @return true if successful.
+         */
+        public bool AddFrame(Image im, int frameDelay)
+        {
+            if ((im == null) || !started)
+            {
+                return false;
+            }
+            bool ok = true;
+            try
+            {
+                if (!sizeSet)
+                {
+                    // use first frame's size
+                    SetSize(im.Width, im.Height);
+                }
+                image = im;
+                GetImagePixels(); // convert to correct format if necessary
+                AnalyzePixels(); // build color table & map pixels
+                if (firstFrame)
+                {
+                    WriteLSD(); // logical screen descriptior
+                    WritePalette(); // global color table
+                    if (repeat >= 0)
+                    {
+                        // use NS app extension to indicate reps
+                        WriteNetscapeExt();
+                    }
+                }
+                WriteGraphicCtrlExt(frameDelay); // write graphic control extension
+                WriteImageDesc(); // image descriptor
+                if (!firstFrame)
+                {
+                    WritePalette(); // local color table
+                }
+                WritePixels(); // encode and write pixel data
+                firstFrame = false;
+            }
+            catch (IOException e)
+            {
+                ok = false;
+            }
+
+            return ok;
+        }
+
         /**
          * Flushes any pending data and closes output file.
          * If writing to an OutputStream, the stream is not
@@ -426,11 +480,47 @@ namespace Gif.Components
 
             //        pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         }
-    
+
         /**
          * Writes Graphic Control Extension
          */
-        protected void WriteGraphicCtrlExt() 
+        protected void WriteGraphicCtrlExt()
+        {
+            fs.WriteByte(0x21); // extension introducer
+            fs.WriteByte(0xf9); // GCE label
+            fs.WriteByte(4); // data block size
+            int transp, disp;
+            if (transparent == Color.Empty)
+            {
+                transp = 0;
+                disp = 0; // dispose = no action
+            }
+            else
+            {
+                transp = 1;
+                disp = 2; // force clear if using transparent color
+            }
+            if (dispose >= 0)
+            {
+                disp = dispose & 7; // user override
+            }
+            disp <<= 2;
+
+            // packed fields
+            fs.WriteByte(Convert.ToByte(0 | // 1:3 reserved
+                disp | // 4:6 disposal
+                0 | // 7   user input - 0 = none
+                transp)); // 8   transparency flag
+
+            WriteShort(delay); // delay x 1/100 sec
+            fs.WriteByte(Convert.ToByte(transIndex)); // transparent color index
+            fs.WriteByte(0); // block terminator
+        }
+
+        /**
+         * Writes Graphic Control Extension
+         */
+        protected void WriteGraphicCtrlExt(int frameDelay) 
         {
             fs.WriteByte(0x21); // extension introducer
             fs.WriteByte(0xf9); // GCE label
@@ -458,7 +548,7 @@ namespace Gif.Components
                 0 | // 7   user input - 0 = none
                 transp )); // 8   transparency flag
 
-            WriteShort(delay); // delay x 1/100 sec
+            WriteShort(frameDelay); // delay x 1/100 sec
             fs.WriteByte( Convert.ToByte( transIndex)); // transparent color index
             fs.WriteByte(0); // block terminator
         }

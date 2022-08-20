@@ -127,7 +127,7 @@ namespace GifMaker
                         using var image = new Bitmap(_imagesPaths[i]);
                         using var croppedImage = image.Crop(CroppingRectangle);
 
-                        encoder.AddFrame(croppedImage);
+                        encoder.AddFrame(croppedImage, Delay);
                         ProcessedImagesCount += 1;
                     }
                     catch (Exception)
