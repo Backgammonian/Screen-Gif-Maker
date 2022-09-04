@@ -1,16 +1,18 @@
 ﻿using System;
-using System.Drawing;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace GifMaker
+namespace Converters
 {
-    public class PointConverter : IValueConverter
+    public class ProgressConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var point = (Point)value;
-            return point.X + ", " + point.Y;
+            var progress = (double)value;
+            var percentageFormat = new NumberFormatInfo { PercentPositivePattern = 1, PercentNegativePattern = 1 };
+            var formattedValue = progress.ToString("P2", percentageFormat);
+
+            return formattedValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
