@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Windows.Media.Imaging;
 
-namespace GifMaker
+namespace Extensions
 {
     public static class BitmapExtensions
     {

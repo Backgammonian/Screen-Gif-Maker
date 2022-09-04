@@ -2,8 +2,9 @@
 using System.Drawing;
 using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
+using Extensions;
 
-namespace GifMaker
+namespace GifMaker.Models
 {
     public class ScreenshotModel : ObservableObject
     {
@@ -29,7 +30,10 @@ namespace GifMaker
             IsSkipped = model.IsSkipped;
             IsThumbnailCreated = model.IsThumbnailCreated;
             Size = new Size(model.Size.Width, model.Size.Height);
-            Thumbnail = model.Thumbnail.Clone();
+            if (IsThumbnailCreated)
+            {
+                Thumbnail = model.Thumbnail.Clone();
+            }
         }
 
         public string Name { get; }

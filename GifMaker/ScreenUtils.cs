@@ -17,14 +17,21 @@ namespace GifMaker
 
         public static Size GetScreenSize()
         {
-            IntPtr primary = GetDC(IntPtr.Zero);
-            int DESKTOPVERTRES = 117;
-            int DESKTOPHORZRES = 118;
-            int actualPixelsX = GetDeviceCaps(primary, DESKTOPHORZRES);
-            int actualPixelsY = GetDeviceCaps(primary, DESKTOPVERTRES);
-            ReleaseDC(IntPtr.Zero, primary);
+            try
+            {
+                IntPtr primary = GetDC(IntPtr.Zero);
+                int DESKTOPVERTRES = 117;
+                int DESKTOPHORZRES = 118;
+                int actualPixelsX = GetDeviceCaps(primary, DESKTOPHORZRES);
+                int actualPixelsY = GetDeviceCaps(primary, DESKTOPVERTRES);
+                ReleaseDC(IntPtr.Zero, primary);
 
-            return new Size(actualPixelsX, actualPixelsY);
+                return new Size(actualPixelsX, actualPixelsY);
+            }
+            catch (Exception)
+            {
+                return new Size(800, 600);
+            }
         }
     }
 }

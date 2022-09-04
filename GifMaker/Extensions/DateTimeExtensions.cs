@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace GifMaker
+namespace Extensions
 {
     public static class DateTimeExtensions
     {
         public static string GetConvinientTimeFormat(this DateTime time)
         {
-            return string.Format("{0}-{1}-{2}-{3}, {4} {5} {6}",
+            return string.Format("{0}-{1}-{2} ({3}), {4} {5} {6}",
                 time.Hour,
                 Format(time.Minute),
                 Format(time.Second),

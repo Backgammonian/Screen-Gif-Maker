@@ -9,78 +9,78 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 using CroppingImageLibrary;
 using Windows = System.Windows;
+using Extensions;
+using GifMaker.Models;
 
 namespace GifMaker
 {
     public class MainViewModel : ObservableObject
     {
-        private BitmapImage _preview;
         private readonly BitmapImage _defaultPreview;
-        private ScreenshotModel _selectedScreenshot;
         private readonly DispatcherTimer _timer;
+        private readonly List<string> _folderNames;
+        private readonly float _originalDpiX;
+        private readonly float _originalDpiY;
+        private ScreenshotModel _selectedScreenshot;
+        private BitmapImage _preview;
         private int _interval;
         private bool _isNotRunning;
         private readonly Size _screenSize;
         private DateTime _startTime;
         private int _currentScreenshotNumber;
-        private readonly List<string> _folderNames;
         private string _currentFolderName;
         private CroppingWindow _croppingWindow;
         private bool _canCreateGif;
         private int _delay;
-        private bool _isNotFullImage;
         private bool _isFullImage;
-        private readonly float _originalDpiX;
-        private readonly float _originalDpiY;
+        private bool _isNotFullImage;
         private bool _isScreenshotMissing;
+        private GifModel _selectedGif;
 
         public MainViewModel()
         {
-            _screenSize = ScreenUtils.GetScreenSize();
-            _timer = new DispatcherTimer();
-            _timer.Tick += TimerTick;
-            _defaultPreview = new BitmapImage();
-
-            IsNotRunning = true;
-            IsNotFullImage = true;
-            Interval = "100";
-            Delay = "100";
-
-            StartTakingScreenshots = new RelayCommand(Start);
-            StopTakingScreenshots = new RelayCommand(Stop);
-            ClearList = new RelayCommand(Clear);
+            StartTakingScreenshotsCommand = new RelayCommand(Start);
+            StopTakingScreenshotsCommand = new RelayCommand(Stop);
+            ClearListCommand = new RelayCommand(Clear);
             MoveUpCommand = new RelayCommand<ScreenshotModel>(MoveUp);
             MoveDownCommand = new RelayCommand<ScreenshotModel>(MoveDown);
             CloneCommand = new RelayCommand<ScreenshotModel>(Clone);
-            CreateGif = new RelayCommand(MakeGif);
+            CreateGifCommand = new AsyncRelayCommand(MakeGif);
             SelectAreaCommand = new RelayCommand(SelectArea);
             OpenGIFInFolderCommand = new RelayCommand<GifModel>(OpenGIFInFolder);
             CancelGIFCreationCommand = new RelayCommand<GifModel>(CancelGIFCreation);
 
-            Screenshots = new ObservableCollection<ScreenshotModel>();
-            Screenshots.CollectionChanged += (_, __) => OnPropertyChanged(nameof(ScreenshotsCount));
-            Gifs = new ObservableCollection<GifModel>();
-
-            IsScreenshotMissing = false;
-            CanCreateGif = false;
-
+            _folderNames = new List<string>();
+            _screenSize = ScreenUtils.GetScreenSize();
+            _timer = new DispatcherTimer();
+            _timer.Tick += OnTimerTick;
+            _defaultPreview = new BitmapImage();
             var dpiXProperty = typeof(Windows.SystemParameters).GetProperty("DpiX", BindingFlags.NonPublic | BindingFlags.Static);
             var dpiYProperty = typeof(Windows.SystemParameters).GetProperty("Dpi", BindingFlags.NonPublic | BindingFlags.Static);
             _originalDpiX = (int)dpiXProperty.GetValue(null, null);
             _originalDpiY = (int)dpiYProperty.GetValue(null, null);
 
-            _folderNames = new List<string>();
+            IsNotRunning = true;
+            IsNotFullImage = true;
+            Interval = "100";
+            Delay = "100";
+            IsScreenshotMissing = false;
+            CanCreateGif = false;
+            Screenshots = new ObservableCollection<ScreenshotModel>();
+            Screenshots.CollectionChanged += (_, __) => OnPropertyChanged(nameof(ScreenshotsCount));
+            Gifs = new ObservableCollection<GifModel>();
         }
 
-        public ICommand StartTakingScreenshots { get; }
-        public ICommand StopTakingScreenshots { get; }
-        public ICommand ClearList { get; }
-        public ICommand CreateGif { get; }
+        public ICommand StartTakingScreenshotsCommand { get; }
+        public ICommand StopTakingScreenshotsCommand { get; }
+        public ICommand ClearListCommand { get; }
+        public ICommand CreateGifCommand { get; }
         public ICommand MoveUpCommand { get; }
         public ICommand MoveDownCommand { get; }
         public ICommand SkipCommand { get; }
@@ -88,11 +88,17 @@ namespace GifMaker
         public ICommand SelectAreaCommand { get; }
         public ICommand OpenGIFInFolderCommand { get; }
         public ICommand CancelGIFCreationCommand { get; }
-        public ObservableCollection<ScreenshotModel> Screenshots { get; }
-        public GifModel SelectedGif { get; set; }
-        public ObservableCollection<GifModel> Gifs { get; }
-        public int ScreenshotsCount => Screenshots.Count;
+
         public bool IsRunning => !IsNotRunning;
+        public int ScreenshotsCount => Screenshots.Count;
+        public ObservableCollection<ScreenshotModel> Screenshots { get; }
+        public ObservableCollection<GifModel> Gifs { get; }
+       
+        public GifModel SelectedGif
+        {
+            get => _selectedGif;
+            set => SetProperty(ref _selectedGif, value);
+        }
 
         public ScreenshotModel SelectedScreenshot
         {
@@ -109,10 +115,17 @@ namespace GifMaker
                 else
                 if (File.Exists(SelectedScreenshot.ImagePath))
                 {
-                    using var bitmap = new Bitmap(SelectedScreenshot.ImagePath);
-                    Preview = bitmap.ToBitmapImage();
+                    try
+                    {
+                        using var bitmap = new Bitmap(SelectedScreenshot.ImagePath);
+                        Preview = bitmap.ToBitmapImage();
 
-                    IsScreenshotMissing = false;
+                        IsScreenshotMissing = false;
+                    }
+                    catch (Exception)
+                    {
+                        IsScreenshotMissing = true;
+                    }
                 }
                 else
                 {
@@ -199,7 +212,7 @@ namespace GifMaker
             private set => SetProperty(ref _isScreenshotMissing, value);
         }
 
-        private void TimerTick(object sender, EventArgs e)
+        private void OnTimerTick(object sender, EventArgs e)
         {
             try
             {
@@ -305,7 +318,7 @@ namespace GifMaker
             CanCreateGif = true;
         }
 
-        private async void MakeGif()
+        private async Task MakeGif()
         {
             if (!CanCreateGif)
             {
@@ -348,8 +361,8 @@ namespace GifMaker
                 width == 0 &&
                 height == 0)
             {
-                width = Convert.ToInt32(Screenshots[0].Size.Width);
-                height = Convert.ToInt32(Screenshots[0].Size.Height);
+                width = _screenSize.Width;
+                height = _screenSize.Height;
             }
 
             width = width == 0 ? 1 : width;
@@ -371,7 +384,7 @@ namespace GifMaker
                 return;
             }
 
-            Debug.WriteLine("File name " + saveFileDialog.FileName);
+            Debug.WriteLine("File name: " + saveFileDialog.FileName);
 
             var screenshotsPaths = new List<string>();
             foreach (var screenshot in Screenshots)
@@ -422,16 +435,22 @@ namespace GifMaker
                 try
                 {
                     Directory.Delete(_folderNames[i], true);
+
+                    Debug.WriteLine($"Deleted folder {_folderNames[i]}");
                 }
                 catch (Exception)
                 {
+                    Debug.WriteLine($"Can't delete folder {_folderNames[i]}");
                 }
             }
         }
 
         public void CancelGIFCreation(GifModel gifModel)
         {
-            var result = Windows.MessageBox.Show("Do you want to cancel creation of '" + gifModel.Name + "'?", "Cancel confirm", Windows.MessageBoxButton.YesNo, Windows.MessageBoxImage.Exclamation);
+            var result = Windows.MessageBox.Show("Do you want to cancel creation of '" + gifModel.Name + "'?",
+                "Cancel confirm",
+                Windows.MessageBoxButton.YesNo,
+                Windows.MessageBoxImage.Exclamation);
             if (result != Windows.MessageBoxResult.Yes)
             {
                 return;
